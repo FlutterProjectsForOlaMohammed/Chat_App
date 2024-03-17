@@ -1,7 +1,6 @@
 import 'package:chatappfortest/constants.dart';
-import 'package:chatappfortest/Screens/chat_view.dart';
 import 'package:chatappfortest/Screens/register_view.dart';
-import 'package:chatappfortest/methods/user_sign_in.dart';
+import 'package:chatappfortest/cubits/loginCubit/login_cubit.dart';
 import 'package:chatappfortest/widgets/Click_Bottom.dart';
 import 'package:chatappfortest/widgets/text_form_field.dart';
 import 'package:chatappfortest/widgets/customized_text.dart';
@@ -9,11 +8,12 @@ import 'package:chatappfortest/widgets/login_or_register_customized_row.dart';
 import 'package:chatappfortest/widgets/person_logo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 
 class LoginForm extends StatefulWidget {
-  const LoginForm({super.key});
-
+  const LoginForm({super.key, this.isLoading = false});
+  final bool isLoading;
   @override
   State<LoginForm> createState() => _LoginFormState();
 }
@@ -30,7 +30,7 @@ class _LoginFormState extends State<LoginForm> {
   @override
   Widget build(BuildContext context) {
     return ModalProgressHUD(
-      inAsyncCall: isLoading,
+      inAsyncCall: widget.isLoading,
       progressIndicator: CircularProgressIndicator(
         color: appPrimaryColor,
       ),
@@ -96,41 +96,16 @@ class _LoginFormState extends State<LoginForm> {
                           },
                         ),
                         ClickBottom(
-                          text: "LOGIN",
-                          onTapped: () async {
-                            setState(() {
-                              isLoading = true;
-                            });
-                            if (formKey.currentState!.validate()) {
-                              formKey.currentState!.save();
-                              try {
-                                await userSignIn(
-                                  email: email!,
-                                  password: password!,
-                                );
-                                // ignore: use_build_context_synchronously
-                                Navigator.pushNamed(context, ChatPage.id,
-                                    arguments: email);
-                              } on FirebaseAuthException catch (e) {
-                                if (e.code == 'user-not-found') {
-                                  // ignore: use_build_context_synchronously
-                                  showSnackBar(
-                                      context, 'No user found for that email.');
-                                } else if (e.code == 'wrong-password') {
-                                  // ignore: use_build_context_synchronously
-                                  showSnackBar(context,
-                                      'Wrong password provided for that user.');
-                                }
-                              } catch (ex) {
-                                // ignore: use_build_context_synchronously
-                                showSnackBar(context, ex.toString());
+                            text: "LOGIN",
+                            onTapped: () async {
+                              if (formKey.currentState!.validate()) {
+                                formKey.currentState!.save();
+
+                                BlocProvider.of<LoginCubit>(context)
+                                    .loginMethod(
+                                        email: email!, password: password!);
                               }
-                            }
-                            setState(() {
-                              isLoading = false;
-                            });
-                          },
-                        ),
+                            }),
                         const SizedBox(
                           height: 25,
                         ),

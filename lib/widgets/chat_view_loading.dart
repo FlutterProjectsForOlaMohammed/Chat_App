@@ -11,7 +11,7 @@ class ChatViewLoading extends StatelessWidget {
     return Scaffold(
         body: Center(
       child: Text(
-        "Loading",
+        "wait , Loading All Messages ",
         style: TextStyle(
             color: appPrimaryColor,
             fontWeight: FontWeight.bold,

@@ -1,14 +1,13 @@
+import 'package:chatappfortest/Models/users_data.dart';
 import 'package:chatappfortest/constants.dart';
-import 'package:chatappfortest/Screens/chat_view.dart';
 import 'package:chatappfortest/Screens/login_view.dart';
-import 'package:chatappfortest/methods/create_new_user.dart';
+import 'package:chatappfortest/cubits/registerCubit/register_cubit.dart';
 import 'package:chatappfortest/widgets/Click_Bottom.dart';
 import 'package:chatappfortest/widgets/text_form_field.dart';
 import 'package:chatappfortest/widgets/login_or_register_customized_row.dart';
 import 'package:chatappfortest/widgets/person_logo.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class RegisterForm extends StatefulWidget {
   const RegisterForm({super.key});
@@ -20,7 +19,6 @@ class RegisterForm extends StatefulWidget {
 class _RegisterFormState extends State<RegisterForm> {
   GlobalKey<FormState> formKey = GlobalKey();
   String? email, password, firstName, lastName, confirmPassword;
-  CollectionReference addUser = FirebaseFirestore.instance.collection('Users');
 
   @override
   Widget build(BuildContext context) {
@@ -99,28 +97,13 @@ class _RegisterFormState extends State<RegisterForm> {
                           if (formKey.currentState!.validate() &&
                               password == confirmPassword) {
                             formKey.currentState!.save();
-                            try {
-                              await createNewUser(
-                                  email: email!, password: password!);
-                              await addUserToDataBase();
-                              // ignore: use_build_context_synchronously
-                              showSnackBar(context, "Successful Registration");
-                              // ignore: use_build_context_synchronously
-                              Navigator.pushNamed(context, ChatPage.id,
-                                  arguments: email);
-                            } on FirebaseAuthException catch (e) {
-                              if (e.code == "weak-password") {
-                                // ignore: use_build_context_synchronously
-                                showSnackBar(context,
-                                    "Password must be at least 8 Characters");
-                              } else if (e.code == "email-already-in-use") {
-                                // ignore: use_build_context_synchronously
-                                showSnackBar(context, "Email is already Used");
-                              }
-                            } catch (ex) {
-                              // ignore: use_build_context_synchronously
-                              showSnackBar(context, ex.toString());
-                            }
+                            DataOfUser user = DataOfUser(
+                                firstName: firstName!,
+                                lastName: lastName!,
+                                email: email!,
+                                password: password!);
+                            await BlocProvider.of<RegisterCubit>(context)
+                                .registerMethod(user: user);
                           } else {
                             showSnackBar(context,
                                 "Please Confirm Password in right way ");
@@ -141,17 +124,6 @@ class _RegisterFormState extends State<RegisterForm> {
           ],
         ),
       ),
-    );
-  }
-
-  Future<void> addUserToDataBase() async {
-    await addUser.add(
-      {
-        'First Name': firstName,
-        'Last Name': lastName,
-        'Email': email,
-        'Password': password,
-      },
     );
   }
 }

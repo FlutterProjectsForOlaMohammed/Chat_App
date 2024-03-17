@@ -1,7 +1,8 @@
 import 'package:chatappfortest/constants.dart';
-import 'package:chatappfortest/Screens/chat_view.dart';
+import 'package:chatappfortest/cubits/chatCubit/chat_cubit.dart';
 import 'package:chatappfortest/methods/build_border.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SendMessageTextFormField extends StatefulWidget {
   const SendMessageTextFormField({
@@ -12,7 +13,7 @@ class SendMessageTextFormField extends StatefulWidget {
   });
 
   final TextEditingController textController;
-  final Object? email;
+  final String? email;
   final ScrollController forScorll;
 
   @override
@@ -51,11 +52,8 @@ class _SendMessageTextFormFieldState extends State<SendMessageTextFormField> {
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   formKey.currentState!.save();
-                  await userMessage.add({
-                    'MessageBody': data,
-                    'Created At': DateTime.now(),
-                    'ID': widget.email,
-                  });
+                  await BlocProvider.of<ChatCubit>(context)
+                      .sendMessage(data: data!, email: widget.email!);
                   widget.textController.clear();
                   widget.forScorll.animateTo(0,
                       duration: const Duration(milliseconds: 500),
